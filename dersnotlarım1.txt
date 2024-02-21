@@ -1,0 +1,132 @@
+T-SQL
+
+-SQL-Sharp kütüphanesi kullanýlabilir.
+
+?---Ne kadarlýk okuma yaptýðýný öðrenebilmek için (Messages kýsmýndan görünebilir.)
+SET STATISTICS IO ON
+SELECT * FROM ITEMS WHERE ITEMNAME LIKE '%prima%' AND ITEMNAME LIKE '%72%' AND ITEMNAME LIKE '%BEBEK BEZÝ%'
+
+Bu ifadeyi bir de Full-Text þeklinde getirelim.
+
+SET STATISTICS IO ON
+SELECT * FROM ITEMS WHERE CONTAINS(ITEMNAME,'"prima"')
+and CONTAINS(ITEMNAME,'"bebek bezi"')  and CONTAINS(ITEMNAME,'"72"')
+
+Bu þekilde Full-Text kullanýlarak yapýlan bir arama ile çok daha hýzlý bir þekilde arama yapýlabilir.
+
+
+T-SQL’de String Fonksiyonlarý
+
+SELECT ASCII(M)----> BAYT olarak karþýllýðý
+
+SELECT CONCAT('DATA',' ','SCIENCE')----> Ýki tane string ifadeyi birleþtirmek için
+
+Bunun alternatifi
+
+SELECT 'DATA'+'SCIENCE'
+
+SELECT RIGHT('DATA SCIENCE', 1)----> saðdan 1 ifade al
+
+SELECT TRIM(' DATA SCIENCE ')----> baþtaki ve sondaki boþluklarým temizlenmesi.
+
+
+SELECT LTRIM(' DATA SCIENCE ')
+
+SELECT RTRIM(' DATA SCIENCE ')
+
+SELECT REVERCE(' DATA SCIENCE ')---->tersten yazar
+
+SELECT REPLICATE('DS ', 5)---->ÝFADEYÝ 5 DEFA TEKRARLAMAK ÝÇÝN
+
+SELECT REPLACE('Data scientist olmak hayalim','Data scientist','Veri Bilimci')---->(metin,arananifade,deðiþtirilen ifade)
+
+SELECT REPLACE('DATA SCIENCE',' ','')----> Ýfadenin içindeki bütün boþluklarý temizler.
+
+SELECT SUBSTRING('DATA SCIENCE',1,1)---->(Ýfade,baþlangýç noktasý, ne kadar uzunlukta veri alýnacak)
+
+SELECT LEFT('DATA SCIENCE',8)---->Soldan beri 8 karakter alýr.
+
+SELECT SUBSTRING('DATA SCIENCE',1,8)---->LEFT’in SUBSTRING Karþýlýðý.
+
+SELECT RIGHT('DATA SCIENCE',8)---->saðdan beri 8 karakteri alýr.
+
+SELECT SUBSTRING('DATA SCIENCE',LEN('DATA SCIENCE')-7,8)---->RIGHT Ýfadesinin SUBSTRING karþýlýðý.
+
+
+SELECT CHARINDEX('2022','sql server 2022')---->String ifadenin kaçýncý indexte olduðunu döndürür.Aranan Ýafadenin önce yazýldýðýna dikkat etmek lazým.
+
+SELECT * FROM string_split('the future of big data',' ')--->(Ýfadeyi verilen deðerre göre parçalar ve butu sütun þeklinde alt alta getirir. Ayraç tek karakter içermelidir.)
+Peki tek karakter sorunundan kurtulmak için ne yapýlmalý?
+Ýþte bu senaryoda “replace” fonksiyonunu kullanmalýyýz.
+
+SELECT * FROM string_split(REPLACE('the||futureof||big||data','||','|'),'|')---->Bu örnekte görüldüðü gibi çift çizgiyi tek çizgiyle deðiþtirerek ayýrmayý gerçekleþtirebilirim.
+
+!! string_splitte tablo çeker gibi sorgu yazdýðýmýza dikkat et.
+
+FORMAT FONSKSÝYONU
+
+CREATE TABLE CURRENCYRATE(ID int Identity(1,1),CURRENCY varchar(5),DATE_ DATETIME,ENDOFDAYRATE FLOAT)
+
+INSERT INTO CURRENCYRATE(CURRENCY,DATE_,ENDOFDAYRATE) VALUES ('EUR','2021-09-12 18:01:23',1.2156)
+
+
+SELECT 
+CURRENCY,DATE_,
+FORMAT(ENDOFDAYRATE,'N','tr-tr') AS NumberFormat,
+FORMAT(ENDOFDAYRATE,'G','en-us') AS GeneralFormat,
+FORMAT(ENDOFDAYRATE,'C','de-de') AS CurrencyFormat
+FROM CURRENCYRATE
+
+Tabloya alan(sütun) eklemek için ALTER metodunu kullandým.
+
+SELECT * FROM CUSTOMERS
+ALTER TABLE CUSTOMERS ADD NAMESURNAME VARCHAR(100)
+
+Tablodaki alanlarý(sütunlarý) güncellemek için.
+
+SELECT * FROM CUSTOMERS
+UPDATE CUSTOMERS SET NAMESURNAME = NAME_+' '+SURNAME
+
+Müþteriler tablosundaki müþterilerin isim sayýlarýný bulmak.
+
+SELECT * FROM CUSTOMERS
+UPDATE CUSTOMERS SET NAMECOUNT = (SELECT COUNT(*)-1 FROM string_split(NAMESURNAME, ' '))
+
+Müþteri tablosundaki kiþilerin email adreslerindeki @ iþaretinden sonraki kýsýmlarý bularak sütun olarak gösterdim.
+
+SELECT *,
+RIGHT(EMAIL, (LEN(EMAIL)-CHARINDEX('@',EMAIL)))
+FROM CUSTOMERS
+
+
+!!Burda ben eðer bu mail adresleri saymak istersem bunlarý kategorilemem gerekcek bunun için de þu komutu kullanabilirim.
+
+SELECT *,
+RIGHT(EMAIL, (LEN(EMAIL)-CHARINDEX('@',EMAIL))),COUNT(*)
+FROM CUSTOMERS
+GROUP BY RIGHT(EMAIL, (LEN(EMAIL)-CHARINDEX('@',EMAIL)))
+
+Metnin içinde “çok ifadesinin kaç kere geçtiðini bulmak için”
+
+SELECT
+LEN(STR_),LEN('ÇOK'), LEN(REPLACE(STR_,'ÇOK','')),
+(LEN(STR_)-LEN(REPLACE(STR_,'ÇOK','')))/LEN('ÇOK'),
+* FROM SENTENCES
+
+Ürünler için 5 haneli smartcode oluþturmak için kullanýlmasý gereken kod. Id si tek haneliler için 4, çift haneliler için 3 0, 3 haneliler için 2 0 üretir.
+
+SELECT 
+CATEGORYCODE1+'-'+CATEGORYCODE2+'-'+ REPLICATE('0',5-LEN(ID))+ID AS SMARTCODE,
+* FROM ITEMS
+
+
+Ýlleri virgülle ayýrarak bir dizi içinde arattý.
+
+SELECT * FROM SALES
+WHERE CITY IN
+(
+SELECT VALUE FROM string_split('burdur,artvin,bayburt,adana',',')
+)
+
+
+Print komutuyla veriyi yazdýracaðýmýzda enter koymak için gerekli kod---->CHAR(13)

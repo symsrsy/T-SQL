@@ -1,0 +1,1 @@
+T-SQL ders notlarım
